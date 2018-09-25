@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+import sys
+import time
+import random
+import csv
+import argparse
+
+def read_vocab_file(filename):
+    with open(filename, newline='') as csvfile:
+        csvreader = csv.reader(csvfile, strict=True, skipinitialspace=True)
+        vocab = []
+        for row in csvreader:
+            if len(row) != 2:
+                continue
+            vocab.append({
+                '0': row[0],
+                '1': row[1],
+                'incorrect': True
+                })
+        return vocab
+
+def next_card(cards):
+
+    # Pick random incorrect card if they exist, otherwise random card
+    
+    incorrect_cards = [card for card in cards if card['incorrect']]
+
+    if incorrect_cards:
+        card = random.choice(incorrect_cards)
+    else:
+        card = random.choice(cards)
+
+    # Ask question
+
+    response = input("[" + str(len(incorrect_cards)) + "] " + card['0'] + ": ")
+    
+    if response == card['1']:
+        card['incorrect'] = False
+    else:
+        card['incorrect'] = True
+        
+        # Temporarily print correct answer
+        print("* " + card['1'], end='\r', flush=True)
+        time.sleep(0.5)
+        sys.stdout.write("\033[K")
+
+def main():
+    parser = argparse.ArgumentParser(description='Command line vocab quiz')
+    parser.add_argument('csv_file')
+    args = parser.parse_args()
+   
+    vocab = read_vocab_file(args.filename)
+
+    while True:
+        next_card(vocab)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print()
